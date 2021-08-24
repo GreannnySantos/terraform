@@ -10,7 +10,6 @@ resource "aws_instance" "web" {
   count             = "${var.count}"
   key_name               = "${var.key_name}"
   vpc_security_group_ids = ["${aws_security_group.instance.id}"]
-  source_dest_check = false
   instance_type = "t2.micro"
 tags {
     Name = "${format("web-%03d", count.index + 1)}"
@@ -41,11 +40,9 @@ resource "aws_launch_configuration" "gs-lc" {
   user_data = <<-EOF
               #!/bin/bash
               echo "Hello, World" > index.html
-              nohup busybox httpd -f -p 8080 &
+              service httpd start
               EOF
-  lifecycle {
-    create_before_destroy = true
-  }
+        
 }
 ## Creating AutoScaling Group
 resource "aws_autoscaling_group" "gs-asg" {
@@ -58,7 +55,8 @@ resource "aws_autoscaling_group" "gs-asg" {
   tag {
     key = "Name"
     value = "terraform-gs-asg"
-    propagate_at_launch = true
+    
   }
 }
+
 
